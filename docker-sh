@@ -1,0 +1,22 @@
+#!/usr/bin/env zsh
+#
+# Open a shell into a running container
+
+containers=$(docker ps --filter status=running)
+record_n=$(( $(echo -e $containers | wc -l) -1))
+
+if [[ "$record_n" == 0 ]]; then
+    printf 'No docker container running'
+    return 1
+fi
+
+if [[ "$record_n" > 1 ]]; then
+    echo -e $(echo -e $containers | awk 'BEGIN{n=1}NR>1{printf "%d) %s - %s\\n",n,$1,$2;n+=1}')
+    echo 'Select container (1, 2, 3...)'
+    read cnt; ((cnt++))
+    id=$(echo -e $containers | awk -v line="$cnt" 'FNR==line{print $1}')
+else
+    id=$(echo -e $containers | awk 'NR>1{print $1}')
+fi
+
+docker exec -it $id /bin/bash
